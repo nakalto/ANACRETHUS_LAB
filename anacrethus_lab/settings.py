@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'core',
     'accounts',
     'repos',
-    'branch',
+    'branches',
     'commits',
     'ci',
 ]

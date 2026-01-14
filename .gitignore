@@ -1,0 +1,48 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+env/
+venv/
+ENV/
+*.env
+
+# Django stuff
+*.log
+*.pot
+*.pyc
+*.sqlite3
+db.sqlite3
+
+# Migrations (keep actual migration files, ignore caches)
+*/migrations/__pycache__/
+
+# Media and static files
+media/
+staticfiles/
+accounts/static/
+accounts/templates/
+
+# IDE/editor configs
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# PostgreSQL / psycopg2 build artifacts
+*.dist-info/
+*.egg-info/
+*.libs/
+
+# Coverage / testing
+.coverage
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
