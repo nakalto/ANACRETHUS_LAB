@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your repositories - ANACRETHUS_LAB</title>
+    <link rel="stylesheet" href="/static/repos.css"/>
+</head>
+<body>
+    <header>
+        <h1>your repositories</h1>
+        <a href="{% url 'repos:create' %}">Create new repository</a>
+    </header>
+    <section>
+        <ul>
+            {% for repo in repos %}
+                <li>{{repo.owner.username}}//{{repo.name}} - {{repo.descriptiom}}</li>
+            {% empty %}
+                <li>No repositories yet. Create your first one. </li>   
+                
+            {% endfor %}     
+        </ul>
+    </section>
+</body>
+</html>
