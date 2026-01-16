@@ -46,7 +46,7 @@ def commit_create(request):
     #fetch the branch or render a minimal page if missing
     branch = Branch.objects.filter(id=branch_id).first() if branch_id else None
     #render the commit creation form template
-    return render(request, 'commits/commit_create.html' {'branch':branch})
+    return render(request, 'commits/commit_create.html', {'branch':branch})
 
 #Define a view to list commits for specific branch
 @login_required
@@ -54,7 +54,7 @@ def commit_list(request, branch_id):
     #fetch the target branch or return 404 if not found 
     branch = get_object_or_404(Branch, id=branch_id)
     #Query commits associated with this branch ordered by newest first 
-    commits = Commit.objects.objects.filter(branch=branch).order_by('-created_at')
+    commits = Commit.objects.filter(branch=branch).order_by('-created_at')
     #render the commit list template with branch and commits context 
     return render(request, 'commits/commit_list.html', {'branch':branch, 'commits':commits})
 
