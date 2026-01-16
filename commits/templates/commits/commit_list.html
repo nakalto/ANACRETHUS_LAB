@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>commit history</title>
+    <link rel="stylesheet" href="/static/commits.css">
+
+</head>
+<body>
+   <h1>commits for branch {{ branch.name }}</h1>
+   <a href="{% url 'commits:create' %}?branch_id={{ branch.id }}">Create new commits</a>
+   <ul>
+        {% for c in commits %}
+             <li>
+                <strong>{{ c.message }}</strong>
+                -{{ c.author.username}}
+                -<span class="status-{{ c.status }}">{{ c.status }}</span>
+                -<small>{{ c.created_at }}</small>
+
+             </li>
+             {% empty %}
+                <li>No commits yet. create first commit. </li>
+        {% endfor %}        
+
+   </ul>
+</body>
+</html>

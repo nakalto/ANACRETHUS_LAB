@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Commit</title>
+</head>
+<body>
+    <h1>Create Commit</h1>
+     <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="branch_id" value="{{ branch.id }}">
+        <label for="message">Commit Message:</label>
+        <input type="text" id="message" name="message" required>
+        <label for="snapshot_text">Snapshot Text:</label>
+        <textarea id="snapshot_text" name="snapshot_text"></textarea>
+        <button type="submit">Create Commit</button>
+     </form>
+</body>
+</html>
