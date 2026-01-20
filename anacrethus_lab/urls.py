@@ -24,6 +24,6 @@ urlpatterns = [
     path('branches/', include('branches.urls')),
     path('commits/', include('commits.urls')),
     path('ci/', include('ci.urls')),
-    path('core/', include('core.urls')),
+    #path('core/', include('core.urls')),
     
 ]
