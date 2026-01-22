@@ -17,3 +17,6 @@ def signup(request):
         form = UserCreationForm()
     # Render the signup template with the form
     return render(request, 'accounts/signup.html', {'form': form})
+
+
+
