@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Merge branches in {{ repo.name }}</h2>
+
+<!-- Display error/success messages -->
+{% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li class="{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+  <label for="source">Source branch:</label>
+  <select id="source" name="source_branch_id" required>
+    {% for branch in repo.branches.all %}
+      <option value="{{ branch.id }}">{{ branch.name }}</option>
+    {% endfor %}
+  </select>
+
+  <label for="target">Target branch:</label>
+  <select id="target" name="target_branch_id" required>
+    {% for branch in repo.branches.all %}
+      <option value="{{ branch.id }}">{{ branch.name }}</option>
+    {% endfor %}
+  </select>
+
+  <button type="submit">Merge</button>
+</form>
+
+<a href="{% url 'repos:detail' repo.id %}">Back to repository</a>
+{% endblock %}

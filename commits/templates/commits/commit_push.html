@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Page title shows which repo you are pushing to -->
+  <title>Push Code - {{ repo.name }}</title>
+  <style>
+    /* Basic styling for readability */
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h2 { color: #0366d6; }
+    form { margin-top: 20px; }
+    label { display: block; margin-top: 10px; }
+    input, button { margin-top: 5px; }
+    .messages li { list-style: none; margin: 5px 0; }
+    .messages .error { color: red; }
+    .messages .success { color: green; }
+  </style>
+</head>
+<body>
+  <!-- Heading shows branch and repo context -->
+  <h2>Push code to {{ branch.name }} in {{ repo.name }}</h2>
+
+  <!-- Show Django messages (success/error notifications) -->
+  {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+        <li class="{{ message.tags }}">{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <!-- Push form -->
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <!-- Commit message input -->
+    <label for="message">Commit message:</label>
+    <input type="text" id="message" name="message" placeholder="Commit message" required>
+
+    <!-- File/folder upload input -->
+    <label for="files">Upload files or a folder:</label>
+    <!-- webkitdirectory allows selecting a folder and uploads all nested files -->
+    <input type="file" id="files" name="files" webkitdirectory multiple required>
+
+    <!-- Submit button -->
+    <button type="submit">Push Code</button>
+  </form>
+
+  <!-- Navigation back to repo detail -->
+  <p><a href="{% url 'repos:detail' repo.id %}">Back to repository</a></p>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!-- Heading for the code section -->
+<h2>All code pushed to {{ repo.name }}</h2>
+
+{% if files %}
+  <!-- Render a list of files/folders under the current path -->
+  <ul>
+    {% for name, node in files.items %}
+      <li>
+        {% if node.is_dir %}
+          <!-- Folder link: clicking navigates deeper into the folder -->
+          <span class="folder">
+            <a href="{% url 'repos:code' repo.id path|add:name|add:'/' %}">{{ name }}/</a>
+          </span>
+        {% else %}
+          <!-- File link: clicking opens the file in file_view -->
+          <a class="file" href="{% url 'repos:file_view' repo.id branch.id path|add:name %}">{{ name }}</a>
+
+          <!-- Show commit info if available (message, author, date) -->
+          {% if node.commit_message %}
+            <span class="commit-meta"
+                  title="Commit {{ node.commit_hash }} by {{ node.commit_author }}">
+              — {{ node.commit_message }} ({{ node.commit_date|date:"M d, Y H:i" }})
+            </span>
+          {% endif %}
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <!-- Message shown if no files exist in the repo -->
+  <p>No code has been pushed yet.</p>
+{% endif %}

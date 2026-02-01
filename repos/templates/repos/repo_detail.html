@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ repo.owner.username }}/{{ repo.name }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f6f8fa; color: #24292e; }
+    h1 { margin-bottom: 5px; }
+    h2 { margin-top: 25px; color: #0366d6; }
+    ul { list-style-type: none; padding-left: 20px; }
+    li { margin: 5px 0; }
+    pre { background: #fff; padding: 10px; border-radius: 5px; overflow-x: auto; border: 1px solid #ddd; }
+    .folder { font-weight: bold; color: #0366d6; }
+    .file { color: #24292e; text-decoration: none; }
+    .actions { margin-top: 20px; }
+    .actions a { margin-right: 15px; color: #0366d6; text-decoration: none; }
+    .actions a:hover { text-decoration: underline; }
+    .commit-history { margin-top: 30px; }
+    .commit-history li { margin-bottom: 8px; }
+    .commit-meta { color: #6a737d; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <!-- Repository metadata -->
+  <h1>{{ repo.owner.username }}/{{ repo.name }}</h1>
+  <p>{{ repo.description }}</p>
+
+  <!-- Default branch info -->
+  {% if default_branch %}
+    <p>Default branch: <strong>{{ default_branch.name }}</strong></p>
+  {% else %}
+    <p>No default branch found.</p>
+  {% endif %}
+
+  <!-- Visibility -->
+  <p>Visibility: {% if repo.is_private %}Private{% else %}Public{% endif %}</p>
+
+  <!-- Quick setup instructions -->
+  <h2>Quick setup</h2>
+  <pre>
+git clone git@anacrethus-lab.local:{{ repo.owner.username }}/{{ repo.name }}.git
+cd {{ repo.name }}
+git push -u origin main
+  </pre>
+
+  <!-- Actions bar -->
+  <div class="actions">
+    {% if default_branch %}
+       <a href="{% url 'commits:push' repo.id default_branch.id %}">Push Code</a>
+    {% else %} 
+        <span style="color: #6a737d;">Push code (no branch yet)</span>  
+    {% endif %}    
+    
+    <a href="{% url 'repos:pull' repo.id %}">Pull Latest Code</a>
+    <a href="{% url 'branches:create' repo.id %}">Create Branch</a>
+    <a href="{% url 'branches:merge' repo.id %}">Merge Branches</a>
+    <a href="{% url 'repos:code' repo.id %}">View All Code</a>
+  </div>
+
+  <!-- Code section -->
+  <h2>Code{% if default_branch %} ({{ default_branch.name }}){% endif %}</h2>
+  {% if file_tree and default_branch %}
+    <!-- Include file tree with repo and branch context -->
+    {% include "repos/_file_tree.html" with tree=file_tree repo=repo branch=default_branch %}
+  {% else %}
+    <p>This repository is empty. Push code to see files here.</p>
+  {% endif %}
+
+  <!-- Commit history -->
+  <h2>Commit history</h2>
+  <div class="commit-history">
+    {% if commits %}
+      <ul>
+        {% for commit in commits %}
+          <li>
+            <a href="{% url 'commits:detail' commit.id %}">
+              <strong>{{ commit.message }}</strong>
+            </a>
+            — {{ commit.created_at|date:"M d, Y H:i" }}
+            <span class="commit-meta">by {{ commit.author.username }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No commits yet.</p>
+    {% endif %}
+  </div>
+</body>
+</html>

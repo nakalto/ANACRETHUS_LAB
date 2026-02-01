@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ filename }} - {{ repo.name }}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f6f8fa;
+      color: #24292e;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .breadcrumbs {
+      font-size: 14px;
+      color: #6a737d;
+      margin-bottom: 15px;
+    }
+
+    .meta {
+      margin-bottom: 15px;
+      color: #6a737d;
+      font-size: 14px;
+    }
+
+    pre {
+      background: #fff;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      border: 1px solid #ddd;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .binary {
+      background: #fff3cd;
+      padding: 15px;
+      border-radius: 5px;
+      border: 1px solid #ffeeba;
+      color: #856404;
+    }
+
+    a {
+      color: #0366d6;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Breadcrumb Navigation -->
+  <div class="breadcrumbs">
+    <a href="{% url 'repos:detail' repo.id %}">
+      {{ repo.owner.username }}/{{ repo.name }}
+    </a>
+    /
+    <a href="{% url 'repos:code' repo.id %}">
+      {{ branch.name }}
+    </a>
+    /
+    {{ filename }}
+  </div>
+
+  <!-- File Name -->
+  <h1>{{ filename }}</h1>
+
+  <!-- File Metadata -->
+  <div class="meta">
+    Commit: <strong>{{ commit_message }}</strong><br>
+    Author: {{ commit_author }}<br>
+    Date: {{ commit_date|date:"M d, Y H:i" }}<br>
+    Size: {{ file_size }} bytes
+  </div>
+
+  <!-- File Content -->
+  {% if is_text %}
+    <pre>{{ content }}</pre>
+  {% else %}
+    <div class="binary">
+      <strong>Binary file not displayed.</strong><br>
+      This file cannot be rendered as text.<br>
+      Last commit: {{ commit_message }} by {{ commit_author }}
+      on {{ commit_date|date:"M d, Y H:i" }}
+    </div>
+  {% endif %}
+
+  <!-- Back Navigation -->
+  <p>
+    <a href="{% url 'repos:code' repo.id %}">← Back to code</a>
+  </p>
+
+</body>
+</html>

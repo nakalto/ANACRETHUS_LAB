@@ -1,0 +1,26 @@
+{# Loop through each entry (folder or file) in the current tree dictionary #}
+{% for name, node in tree.items %}
+  {% if node.is_dir %}
+    {# Folder node: display folder name and recursively render its children #}
+    <div class="folder">
+      📁 {{ name }}
+      {# Recursively include this same template for nested folders #}
+      {% include "repos/_file_tree.html" with tree=node.children repo=repo branch=branch %}
+    </div>
+  {% else %}
+    {# File node: display file name and link to file_view #}
+    {% if node.path %}
+      <div class="file">
+        {# Link to file_view using full relative path (supports nested folders) #}
+        <a href="{% url 'repos:file_view' repo.id branch.id node.path %}">
+          {{ name }}
+        </a>
+        {# Show commit metadata (message, author, date) for examiner clarity #}
+        <span class="commit-meta"
+              title="Commit {{ node.commit_hash }} by {{ node.commit_author }}">
+          — {{ node.commit_message }} ({{ node.commit_date|date:"M d, Y H:i" }})
+        </span>
+      </div>
+    {% endif %}
+  {% endif %}
+{% endfor %}

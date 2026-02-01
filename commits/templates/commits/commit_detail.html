@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Commit {{ commit.id }} - {{ repo.name }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h2 { color: #0366d6; }
+    pre { background: #f6f8fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h2>Commit: {{ commit.message }}</h2>
+  <p><strong>Author:</strong> {{ commit.author.username }}</p>
+  <p><strong>Date:</strong> {{ commit.created_at|date:"M d, Y H:i" }}</p>
+  <p><strong>Commit ID:</strong> {{ commit.id }}</p>
+
+  <h3>Files in this commit</h3>
+  {% if commit.snapshot %}
+    <ul>
+      {% for filename, content in commit.snapshot.items %}
+        <li>
+          <strong>{{ filename }}</strong>
+          <pre>{{ content }}</pre>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No files in this commit.</p>
+  {% endif %}
+
+  <p><a href="{% url 'repos:detail' repo.id %}">Back to repository</a></p>
+</body>
+</html>
