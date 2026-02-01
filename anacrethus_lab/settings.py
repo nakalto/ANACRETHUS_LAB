@@ -132,6 +132,8 @@ STATIC_ROOT = BASE_DIR/'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+DATA_UPLOAD_MAX_NUMBER_FILES = 10000  
+
 
 LOGIN_URL = '/accounts/login/'
 
