@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>{{ repo.owner.username }}/{{ repo.name }} — CI Dashboard</h2>
+
+<div class="card">
+  <h3>Status Summary</h3>
+
+  {% for item in ci_summary %}
+    <div>
+      {{ item.status }}: {{ item.count }}
+    </div>
+  {% empty %}
+    <p>No CI data.</p>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <h3>Recent Commits</h3>
+
+  {% for commit in commits %}
+    <div style="margin-bottom:10px;">
+      <strong>{{ commit.message }}</strong>
+      — {{ commit.status }}
+    </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

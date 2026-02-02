@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>{{ repo.owner.username }}/{{ repo.name }} — Commits</h2>
+
+<div class="card">
+  {% for commit in commits %}
+    <div style="margin-bottom:15px;">
+      <a href="{% url 'commits:detail' commit.id %}">
+        <strong>{{ commit.message }}</strong>
+      </a>
+      <div style="color:#8b949e; font-size:13px;">
+        {{ commit.created_at|date:"M d, Y H:i" }}
+        — {{ commit.author.username }}
+        — Status: {{ commit.status }}
+      </div>
+    </div>
+  {% empty %}
+    <p>No commits yet.</p>
+  {% endfor %}
+</div>
+
+{% endblock %}

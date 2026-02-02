@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>{{ repo.owner.username }}/{{ repo.name }} — Branches</h2>
+
+<div class="card">
+  {% for item in branch_data %}
+    <div style="margin-bottom:15px;">
+      <strong>{{ item.branch.name }}</strong>
+
+      {% if item.latest_commit %}
+        <div style="color:#8b949e; font-size:13px;">
+          Latest: {{ item.latest_commit.message }}
+          — {{ item.latest_commit.created_at|date:"M d, Y H:i" }}
+        </div>
+      {% else %}
+        <div style="color:#8b949e;">No commits</div>
+      {% endif %}
+    </div>
+  {% empty %}
+    <p>No branches found.</p>
+  {% endfor %}
+</div>
+
+{% endblock %}

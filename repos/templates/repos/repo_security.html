@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>{{ repo.owner.username }}/{{ repo.name }} — Security Alerts</h2>
+
+<div class="card">
+  {% for scan in failed_scans %}
+    <div style="margin-bottom:15px;">
+      <strong>Commit {{ scan.commit.id }}</strong>
+      <div style="color:#ff4d4f;">
+        {{ scan.report }}
+      </div>
+      <div style="color:#8b949e; font-size:13px;">
+        {{ scan.scanned_at|date:"M d, Y H:i" }}
+      </div>
+    </div>
+  {% empty %}
+    <p>No security issues detected 🎉</p>
+  {% endfor %}
+</div>
+
+{% endblock %}
