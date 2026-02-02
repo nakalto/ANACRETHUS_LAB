@@ -7,7 +7,6 @@ from core.utils import contains_secret
 from django.contrib.auth.decorators import login_required
 
 # Create your views here.
-# Define a view to create a commit with secret blocking
 @login_required
 def commit_create(request):
     if request.method == 'POST':
@@ -24,9 +23,13 @@ def commit_create(request):
         repo = branch.repo
 
         # If the snapshot contains secrets, block commit and show error
-        if contains_secret(snapshot_text):
-            messages.error(request, 'Commit blocked: potential secret detected in snapshot.')
-            return render(request, 'commits/commit_create.html', {'branch': branch})
+        if repo.secret_scanning_enabled:
+
+            #check if snapshot contains secrets
+            if contains_secret(snapshot_text):
+            
+              messages.error(request, 'Commit blocked: potential secret detected in snapshot.')
+              return render(request, 'commits/commit_create.html', {'branch': branch})
 
         # Build snapshot dictionary (for now treat snapshot_text as a single file)
         snapshot_data = {
@@ -71,7 +74,7 @@ def commit_list(request, branch_id):
 
 
 # Define a view to handle commit pushes (uploading files to a branch)
-@login_required  # Require the user to be logged in
+@login_required
 def commit_push(request, repo_id, branch_id):
 
     # Fetch the repository and ensure it belongs to the logged-in user
@@ -80,16 +83,16 @@ def commit_push(request, repo_id, branch_id):
     # Fetch the branch and ensure it belongs to the repository
     branch = get_object_or_404(Branch, id=branch_id, repo=repo)
 
-    # Only process form submission (POST request)
+    # Only process POST requests
     if request.method == 'POST':
 
-        # Get commit message from form (default if empty)
+        # Get commit message from form
         message = request.POST.get('message', 'Push code')
 
-        # Dictionary to store all uploaded files and their metadata
+        # Dictionary to store uploaded files
         snapshot_data = {}
 
-        # Define extensions that should ALWAYS be treated as text
+        # Extensions always treated as text
         text_extensions = (
             '.html', '.xml', '.css', '.js', '.md',
             '.py', '.java', '.c', '.cpp', '.h',
@@ -97,46 +100,59 @@ def commit_push(request, repo_id, branch_id):
             '.txt', '.ini', '.cfg', '.yml', '.yaml'
         )
 
-        # Loop through all uploaded files (supports folder upload via webkitdirectory)
+        # Loop through uploaded files
         for file in request.FILES.getlist('files'):
 
-            # Preserve relative path (important for folder structure)
             relative_path = file.name
-
-            # Read raw file bytes ONCE
             data = file.read()
 
-            # Default classification
             content = None
             is_text = False
 
-            # Normalize extension check (case insensitive)
+            # Force text decoding for known source files
             if relative_path.lower().endswith(text_extensions):
-
-                # 🔥 Force decode as UTF-8 text for known source files
-                # Use 'replace' so decoding never crashes
                 content = data.decode('utf-8', errors='replace')
                 is_text = True
 
             else:
-                # Attempt to decode unknown files as UTF-8 first
                 try:
                     content = data.decode('utf-8')
                     is_text = True
                 except UnicodeDecodeError:
-                    # If decoding fails → treat as binary and store Base64
                     import base64
                     content = base64.b64encode(data).decode('ascii')
                     is_text = False
 
-            # Store file entry in snapshot dictionary
             snapshot_data[relative_path] = {
-                'content': content,   # Text content OR Base64 string
-                'is_text': is_text,   # Whether file is text or binary
-                'size': len(data),    # File size in bytes
+                'content': content,
+                'is_text': is_text,
+                'size': len(data),
             }
 
-        # Create commit record in database
+        
+        # AUTOMATIC SECRET SCANNING
+    
+
+        if repo.secret_scanning_enabled:
+
+            for path, file_data in snapshot_data.items():
+
+                # Only scan text files
+                if file_data["is_text"]:
+
+                    if contains_secret(file_data["content"]):
+
+                        messages.error(
+                            request,
+                            f"Commit blocked: secret detected in '{path}'."
+                        )
+
+                        # Stop execution — do NOT create commit
+                        return redirect('repos:detail', repo_id=repo.id)
+
+        
+        # CREATE COMMIT ONLY IF CLEAN
+
         Commit.objects.create(
             repo=repo,
             branch=branch,
@@ -146,20 +162,19 @@ def commit_push(request, repo_id, branch_id):
             status='pending'
         )
 
-        # Notify user of successful push
         messages.success(
             request,
             f'Pushed {len(snapshot_data)} files to branch "{branch.name}".'
         )
 
-        # Redirect back to repository detail page
         return redirect('repos:detail', repo_id=repo.id)
 
-    # If GET request → render push form page
+    # If GET request → show push page
     return render(request, 'commits/commit_push.html', {
         'repo': repo,
         'branch': branch
     })
+
 
 
 

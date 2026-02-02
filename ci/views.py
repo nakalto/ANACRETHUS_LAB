@@ -1,47 +1,75 @@
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render,redirect, get_object_or_404
-from django.contrib import messages
-from core.utils import contains_secret
-from commits.models import Commit
-from .models import ScanResult
-# Create your views here.
 
-#define a view to run a secret scan agaist a commit
+from django.contrib.auth.decorators import login_required
+
+
+from django.shortcuts import redirect, get_object_or_404
+
+from django.contrib import messages
+
+from commits.models import Commit
+
+from .models import ScanResult
+from core.utils import contains_secret
+
+
 @login_required
 def run_scan(request, commit_id):
-    #fetch the commit object or return 404 if missing 
-    commit = get_object_or_404(Commit,id=commit_id)
-    #Run detection using snapshot_text from the commit 
-    secret_found = contains_secret(commit.snapshot_text)
 
-    #if secret is found, mark , mark the status as failed and create a report 
-    if secret_found:
-        #build a simple report message summarizing failure 
-        report = "secret detected in commit snapshot. please remove and retry ."
-        #create a ScanResults entry with failed status 
+    # Fetch commit or return 404
+    commit = get_object_or_404(Commit, id=commit_id)
+
+    # If commit has no snapshot, fail safely
+    if not commit.snapshot:
+        messages.error(request, "No files found in commit.")
+        return redirect('commits:list', branch_id=commit.branch.id)
+
+    secret_detected = False
+    report_lines = []
+
+    # Loop through all files in snapshot
+    for path, file_data in commit.snapshot.items():
+
+        # Only scan text files
+        if isinstance(file_data, dict) and file_data.get("is_text", True):
+
+            content = file_data.get("content", "")
+
+            # Run secret detection
+            if contains_secret(content):
+                secret_detected = True
+                report_lines.append(f"Secret detected in file: {path}")
+
+    # If any secret found
+    if secret_detected:
+
+        report = "\n".join(report_lines)
+
+        # Save scan result
         ScanResult.objects.create(
             commit=commit,
             status='failed',
             report=report
         )
-        #update commits status to failed 
+
+        # Update commit status
         commit.status = 'failed'
-        #persist the change to the database 
         commit.save()
-        #notify  user about failure 
-        messages.error(request, "scan failed: secret detected")
 
-    #if no secret found 
+        messages.error(request, "CI scan failed: secret detected.")
+
     else:
-        #build a sucess report message 
-        report = "No secrets detected. Commit passed. "
-        #create a scan result entry with passed status 
-        ScanResult.objects.create(commit=commit, report=report, status='passed')
-        #update commit status to passed 
+
+        report = "No secrets detected. Commit passed."
+
+        ScanResult.objects.create(
+            commit=commit,
+            status='passed',
+            report=report
+        )
+
+        commit.status = 'passed'
         commit.save()
-        #notify user about success 
-        messages.success(request,  'scan passed: no secret found ')
 
+        messages.success(request, "CI scan passed.")
 
-    #Redirect back to the brach commit list for content 
-    return redirect ('commits:list', branch_id=commit.branch.id)    
+    return redirect('commits:list', branch_id=commit.branch.id)

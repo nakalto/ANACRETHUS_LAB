@@ -10,6 +10,7 @@ class Repository(models.Model):
     is_private = models.BooleanField(default=False)
     default_branch = models.CharField(max_length=50, default='main')
     created_at = models.DateTimeField(auto_now_add=True)
+    secret_scanning_enabled = models.BooleanField(default=True)
 
 
     #ensure owner/name pair is unique to prevent duplicates
