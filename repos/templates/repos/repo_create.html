@@ -1,49 +1,95 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Create Repository</title>
-</head>
-<body>
-  <h1>Create a new repository</h1>
+{% extends "base.html" %}
+
+{% block title %}
+Create Repository
+{% endblock %}
+
+{% block content %}
+
+<div class="repo-header">
+  <h2>Create a new repository</h2>
+</div>
+
+<div class="card">
 
   <form method="post">
     {% csrf_token %}
 
-    <h2>General</h2>
-    <label>Owner: {{ request.user.username }}</label><br>
+    
+    <!-- General Section -->
+  
 
-    <label for="name">Repository name *</label><br>
-    <input type="text" id="name" name="name" required><br>
+    <h3>General</h3>
 
-    <label for="description">Description (optional)</label><br>
-    <textarea id="description" name="description"></textarea><br>
+    <div style="margin-bottom:15px;">
+      <strong>Owner:</strong> {{ request.user.username }}
+    </div>
 
-    <h2>Configuration</h2>
-    <label for="visibility">Choose visibility *</label><br>
-    <select id="visibility" name="visibility">
-      <option value="public">Public</option>
-      <option value="private">Private</option>
-    </select><br>
+    <div style="margin-bottom:15px;">
+      <label>Repository name *</label><br>
+      <input type="text" name="name" required
+             style="width:100%; padding:8px; border-radius:6px; border:1px solid #30363d; background:#0d1117; color:#c9d1d9;">
+    </div>
 
-    <label>
-      <input type="checkbox" name="add_readme"> Add README
-    </label><br>
+    <div style="margin-bottom:20px;">
+      <label>Description (optional)</label><br>
+      <textarea name="description"
+                style="width:100%; padding:8px; border-radius:6px; border:1px solid #30363d; background:#0d1117; color:#c9d1d9;"></textarea>
+    </div>
 
-    <label for="gitignore">Add .gitignore</label><br>
-    <select id="gitignore" name="gitignore">
-      <option value="">No .gitignore</option>
-      <option value="Python">Python</option>
-      <option value="Django">Django</option>
-    </select><br>
 
-    <label for="license">Add license</label><br>
-    <select id="license" name="license">
-      <option value="">No license</option>
-      <option value="MIT">MIT</option>
-      <option value="GPL">GPL</option>
-    </select><br>
+    
+    <!-- Configuration Section -->
+    
 
-    <button type="submit">Create repository</button>
+    <h3>Configuration</h3>
+
+    <div style="margin-bottom:15px;">
+      <label>Visibility *</label><br>
+      <select name="visibility"
+              style="width:100%; padding:8px; border-radius:6px; border:1px solid #30363d; background:#0d1117; color:#c9d1d9;">
+        <option value="public">Public</option>
+        <option value="private">Private</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom:15px;">
+      <label>
+        <input type="checkbox" name="add_readme">
+        Add a README file
+      </label>
+    </div>
+
+    <div style="margin-bottom:15px;">
+      <label>Add .gitignore</label><br>
+      <select name="gitignore"
+              style="width:100%; padding:8px; border-radius:6px; border:1px solid #30363d; background:#0d1117; color:#c9d1d9;">
+        <option value="">None</option>
+        <option value="Python">Python</option>
+        <option value="Django">Django</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom:25px;">
+      <label>Add license</label><br>
+      <select name="license"
+              style="width:100%; padding:8px; border-radius:6px; border:1px solid #30363d; background:#0d1117; color:#c9d1d9;">
+        <option value="">None</option>
+        <option value="MIT">MIT</option>
+        <option value="GPL">GPL</option>
+      </select>
+    </div>
+
+    
+    <!-- Submit Button -->
+    
+
+    <button type="submit" class="btn">
+      Create repository
+    </button>
+
   </form>
-</body>
-</html>
+
+</div>
+
+{% endblock %}

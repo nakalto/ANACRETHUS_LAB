@@ -1,21 +1,57 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Your repositories</title>
-</head>
-<body>
-  <h1>Your repositories</h1>
-  <a href="{% url 'repos:create' %}">Create new repository</a>
-  <ul>
-    {% for repo in repos %}
-      <li>
-        <a href="{% url 'repos:detail' repo.id %}">
-          {{ repo.owner.username }}/{{ repo.name }}
-        </a> - {{ repo.description }}
-      </li>
-    {% empty %}
-      <li>No repositories yet.</li>
-    {% endfor %}
-  </ul>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}
+Your Repositories
+{% endblock %}
+
+{% block content %}
+
+<h2>Your Repositories</h2>
+
+<div class="card" style="margin-bottom:20px;">
+  <a class="btn" href="{% url 'repos:create' %}">
+    + New Repository
+  </a>
+</div>
+
+<div class="card">
+
+  {% for repo in repos %}
+    <div style="margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid #30363d;">
+
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+
+        <div>
+          <a href="{% url 'repos:detail' repo.id %}"
+             style="font-size:16px; font-weight:600; color:#58a6ff; text-decoration:none;">
+            {{ repo.owner.username }}/{{ repo.name }}
+          </a>
+
+          <div style="color:#8b949e; font-size:13px; margin-top:4px;">
+            {{ repo.description|default:"No description provided." }}
+          </div>
+        </div>
+
+        <div>
+          {% if repo.is_private %}
+            <span class="btn-secondary">Private</span>
+          {% else %}
+            <span class="btn-secondary">Public</span>
+          {% endif %}
+        </div>
+
+      </div>
+
+      <div style="color:#8b949e; font-size:12px; margin-top:6px;">
+        Created {{ repo.created_at|date:"M d, Y" }}
+      </div>
+
+    </div>
+
+  {% empty %}
+    <p>No repositories yet.</p>
+  {% endfor %}
+
+</div>
+
+{% endblock %}

@@ -1,28 +1,101 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>ANACRETHUS_LAB Dashboard</title>
-</head>
-<body>
-  <h1>Welcome, {{ request.user.username }}</h1>
+{% extends "base.html" %}
 
-  <h2>Your repositories</h2>
-  <a href="{% url 'repos:create' %}">+ New Repository</a>
-  <ul>
-    {% for repo in user_repos %}
-      <li>
-        <a href="{% url 'repos:detail' repo.id %}">
-          {{ repo.owner.username }}/{{ repo.name }}
-        </a> - {{ repo.description }}
-      </li>
-    {% empty %}
-      <li>No repositories yet. <a href="{% url 'repos:create' %}">Create one</a></li>
-    {% endfor %}
-  </ul>
+{% block title %}
+ANACRETHUS LAB Dashboard
+{% endblock %}
 
-  <h2>Quick actions</h2>
-  <button>Create Issue</button>
-  <button>Write Code</button>
-  <button>Pull Requests</button>
-</body>
-</html>
+{% block content %}
+
+<!-- Welcome Header -->
+
+
+<div class="repo-header">
+  <div>
+    <h2>Welcome, {{ request.user.username }}</h2>
+    <div style="color:#8b949e;">
+      Manage your repositories and development workflow.
+    </div>
+  </div>
+</div>
+
+
+
+<!-- New Repository Button -->
+
+
+<div class="card" style="margin-top:20px;">
+  <a class="btn" href="{% url 'repos:create' %}">
+    + New Repository
+  </a>
+</div>
+
+
+
+<!-- Repository List -->
+
+
+<div class="card">
+  <h3>Your Repositories</h3>
+
+  {% for repo in user_repos %}
+    <div style="margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid #30363d;">
+
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+
+        <div>
+          <a href="{% url 'repos:detail' repo.id %}"
+             style="font-size:16px; font-weight:600; color:#58a6ff; text-decoration:none;">
+            {{ repo.owner.username }}/{{ repo.name }}
+          </a>
+
+          <div style="color:#8b949e; font-size:13px; margin-top:4px;">
+            {{ repo.description|default:"No description provided." }}
+          </div>
+        </div>
+
+        <div>
+          {% if repo.is_private %}
+            <span class="btn-secondary">Private</span>
+          {% else %}
+            <span class="btn-secondary">Public</span>
+          {% endif %}
+        </div>
+
+      </div>
+
+      <div style="color:#8b949e; font-size:12px; margin-top:6px;">
+        Created {{ repo.created_at|date:"M d, Y" }}
+      </div>
+
+    </div>
+
+  {% empty %}
+    <p>
+      No repositories yet.
+      <a href="{% url 'repos:create' %}">Create one</a>
+    </p>
+  {% endfor %}
+</div>
+
+
+
+<!-- Quick Actions -->
+
+
+<div class="card">
+  <h3>Quick Actions</h3>
+
+  <div style="display:flex; gap:15px; flex-wrap:wrap;">
+
+    <a class="btn-secondary" href="{% url 'repos:create' %}">
+      Create Repository
+    </a>
+
+    <a class="btn-secondary" href="{% url 'repos:list' %}">
+      View All Repositories
+    </a>
+
+  </div>
+</div>
+
+{% endblock %}
