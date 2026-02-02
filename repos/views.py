@@ -23,6 +23,10 @@ from branches.models import Branch
 # Import Commit model from commits app
 from commits.models import Commit
 
+from ci.models import ScanResult
+from django.db.models import Count
+
+
 
 
 # Dashboard view (homepage)
@@ -360,3 +364,188 @@ def file_view(request, repo_id, branch_id, filename):
         'commit_author': commit.author.username,  # Commit author username
         'commit_date': commit.created_at,     # Commit timestamp
     })
+
+
+
+
+
+# Repository Commits Page
+
+
+@login_required
+def repo_commits(request, repo_id):
+
+    # Ensure the repository exists and belongs to the logged-in user
+    repo = get_object_or_404(Repository, id=repo_id, owner=request.user)
+
+    # Fetch all commits for this repository ordered newest first
+    commits = Commit.objects.filter(repo=repo).order_by('-created_at')
+
+    # Render repository commits page
+    return render(request, "repos/repo_commits.html", {
+        "repo": repo,
+        "commits": commits,
+    })
+
+
+# Repository Branches Page
+
+@login_required
+def repo_branches(request, repo_id):
+
+    # Ensure repository belongs to user
+    repo = get_object_or_404(Repository, id=repo_id, owner=request.user)
+
+    # Retrieve all branches ordered by creation date
+    branches = Branch.objects.filter(repo=repo).order_by('created_at')
+
+    # Attach latest commit to each branch (for display purposes)
+    branch_data = []
+    for branch in branches:
+        latest_commit = Commit.objects.filter(branch=branch).order_by('-created_at').first()
+        branch_data.append({
+            "branch": branch,
+            "latest_commit": latest_commit
+        })
+
+    # Render branch management page
+    return render(request, "repos/repo_branches.html", {
+        "repo": repo,
+        "branch_data": branch_data,
+    })
+
+
+
+# Repository CI Dashboard
+
+
+@login_required
+def repo_ci(request, repo_id):
+
+    # Ensure repository belongs to current user
+    repo = get_object_or_404(Repository, id=repo_id, owner=request.user)
+
+    # Retrieve commits with their CI status
+    commits = Commit.objects.filter(repo=repo).order_by('-created_at')
+
+    # Count CI status summary for quick stats
+    ci_summary = commits.values('status').annotate(count=Count('status'))
+
+    # Render CI dashboard
+    return render(request, "repos/repo_ci.html", {
+        "repo": repo,
+        "commits": commits,
+        "ci_summary": ci_summary,
+    })
+
+
+
+# Repository Security Dashboard
+
+
+@login_required
+def repo_security(request, repo_id):
+
+    # Ensure repository belongs to current user
+    repo = get_object_or_404(Repository, id=repo_id, owner=request.user)
+
+    # Retrieve all failed scan results linked to this repository
+    failed_scans = ScanResult.objects.filter(
+        commit__repo=repo,
+        status='failed'
+    ).order_by('-scanned_at')
+
+    # Render security alert dashboard
+    return render(request, "repos/repo_security.html", {
+        "repo": repo,
+        "failed_scans": failed_scans,
+    })
+
+
+
+# Repository Settings Page
+@login_required
+def repo_settings(request, repo_id):
+
+    # Ensure repository belongs to logged-in user
+    repo = get_object_or_404(Repository, id=repo_id, owner=request.user)
+
+    # Handle form submission
+    if request.method == "POST":
+
+        
+        # Update repository name
+        new_name = request.POST.get("name", "").strip()
+        if new_name:
+            repo.name = new_name
+
+        
+        # Update description
+        repo.description = request.POST.get("description", "").strip()
+
+    
+        # Update visibility
+        repo.is_private = request.POST.get("visibility") == "private"
+
+        
+        #  Secret Scanning button its post request
+        repo.secret_scanning_enabled = (
+            "secret_scanning_enabled" in request.POST
+        )
+
+        # Save everything
+        repo.save()
+
+        # Success message
+        messages.success(request, "Repository settings updated successfully.")
+
+        # Redirect back to settings page
+        return redirect("repos:repo_settings", repo_id=repo.id)
+
+    # Render settings page (GET request)
+    return render(request, "repos/repo_settings.html", {
+        "repo": repo,
+    })
+
+
+# Placeholder: Issues Page
+@login_required
+def repo_issues(request, repo_id):
+
+    # Ensure repository exists and belongs to user
+    repo = get_object_or_404(Repository, id=repo_id, owner=request.user)
+
+    # Until Issue model is built, show empty page
+    return render(request, "repos/repo_issues.html", {
+        "repo": repo,
+    })
+
+
+# Placeholder: Pull Requests Page
+
+@login_required
+def repo_pulls(request, repo_id):
+
+    # Ensure repository exists and belongs to user
+    repo = get_object_or_404(Repository, id=repo_id, owner=request.user)
+
+    # Until PullRequest model exists, render placeholder
+    return render(request, "repos/repo_pulls.html", {
+        "repo": repo,
+    })
+
+
+@login_required
+def repo_delete(request, repo_id):
+
+    # Ensure repository belongs to user
+    repo = get_object_or_404(Repository, id=repo_id, owner=request.user)
+
+    if request.method == "POST":
+        repo_name = repo.name
+        repo.delete()
+
+        messages.success(request, f'Repository "{repo_name}" deleted successfully.')
+        return redirect("repos:list")
+
+    return redirect("repos:repo_settings", repo_id=repo.id)

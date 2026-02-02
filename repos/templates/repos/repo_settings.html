@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ repo.name }} – Settings
+{% endblock %}
+
+{% block content %}
+
+<h2>Settings – {{ repo.owner.username }}/{{ repo.name }}</h2>
+
+<div class="card" style="padding:20px; margin-bottom:25px;">
+
+  <form method="POST">
+    {% csrf_token %}
+
+    <!-- Repository Name -->
+    <div>
+      <label><strong>Repository Name</strong></label><br>
+      <input type="text" name="name" value="{{ repo.name }}" required>
+    </div>
+
+    <!-- Description -->
+    <div style="margin-top:15px;">
+      <label><strong>Description</strong></label><br>
+      <textarea name="description" rows="4">{{ repo.description }}</textarea>
+    </div>
+
+    <!-- Visibility -->
+    <div style="margin-top:15px;">
+      <label><strong>Visibility</strong></label><br>
+      <select name="visibility">
+        <option value="public" {% if not repo.is_private %}selected{% endif %}>
+          Public
+        </option>
+        <option value="private" {% if repo.is_private %}selected{% endif %}>
+          Private
+        </option>
+      </select>
+    </div>
+
+    <!-- Secret Scanning Toggle -->
+    <div style="margin-top:20px;">
+      <label>
+        <input type="checkbox"
+               name="secret_scanning_enabled"
+               {% if repo.secret_scanning_enabled %}checked{% endif %}>
+        Enable automatic secret scanning
+      </label>
+      <div style="font-size:13px; color:#6a737d; margin-top:5px;">
+        When enabled, all pushed commits are automatically scanned for credentials.
+      </div>
+    </div>
+
+    <div style="margin-top:25px;">
+      <button type="submit" class="btn">Save Changes</button>
+    </div>
+
+  </form>
+
+</div>
+
+
+<!-- Danger Zone -->
+
+
+<div class="card" style="padding:20px; border:1px solid #ff6b6b; background:#fff5f5;">
+
+  <h3 style="color:#d1242f;">Danger Zone</h3>
+
+  <p style="font-size:14px; color:#6a737d;">
+    Once you delete a repository, there is no going back.
+    Please be certain.
+  </p>
+
+  <form method="POST" action="{% url 'repos:delete' repo.id %}">
+    {% csrf_token %}
+    <button type="submit"
+            style="background:#d1242f; color:white; padding:8px 15px; border:none; cursor:pointer;">
+      Delete this repository
+    </button>
+  </form>
+
+</div>
+
+{% endblock %}
