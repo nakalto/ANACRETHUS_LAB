@@ -2,9 +2,9 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render, redirect
 
-# Define a signup view
+
 def signup(request):
-    # If the request is POST, process the form
+    # for post request process the form 
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():

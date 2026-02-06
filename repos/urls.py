@@ -24,10 +24,10 @@ urlpatterns = [
     # Branches
     path('<int:repo_id>/branches/', views.repo_branches, name='repo_branches'),
 
-    # Issues (placeholder)
+    # Issues 
     path('<int:repo_id>/issues/', views.repo_issues, name='repo_issues'),
 
-    # Pull Requests (collaboration workflow, placeholder)
+    # Pull Requests 
     path('<int:repo_id>/pulls/', views.repo_pulls, name='repo_pulls'),
 
     # CI Dashboard

@@ -57,7 +57,7 @@
 </head>
 <body>
 
-  <!-- Breadcrumb Navigation -->
+  
   <div class="breadcrumbs">
     <a href="{% url 'repos:detail' repo.id %}">
       {{ repo.owner.username }}/{{ repo.name }}
@@ -70,7 +70,7 @@
     {{ filename }}
   </div>
 
-  <!-- File Name -->
+  
   <h1>{{ filename }}</h1>
 
   <!-- File Metadata -->
@@ -81,7 +81,7 @@
     Size: {{ file_size }} bytes
   </div>
 
-  <!-- File Content -->
+  
   {% if is_text %}
     <pre>{{ content }}</pre>
   {% else %}

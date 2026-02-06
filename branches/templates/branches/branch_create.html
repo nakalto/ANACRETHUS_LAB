@@ -1,22 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}
+Create Branch — {{ repo.owner.username }}/{{ repo.name }}
+{% endblock %}
 
 {% block content %}
-<h2>Create a new branch in {{ repo.name }}</h2>
 
-<!-- Display error/success messages -->
+<!-- Page Header -->
+<div style="margin-bottom:20px;">
+  <h2>Create New Branch</h2>
+  <div style="color:#8b949e;">
+    Repository: <strong>{{ repo.owner.username }}/{{ repo.name }}</strong>
+  </div>
+</div>
+
+<!-- Messages -->
 {% if messages %}
-  <ul class="messages">
+  <ul style="padding:0; list-style:none;">
     {% for message in messages %}
-      <li class="{{ message.tags }}">{{ message }}</li>
+      <li style="
+        margin-bottom:8px;
+        padding:10px;
+        border-radius:6px;
+        {% if message.tags == 'success' %}
+          background:#e6ffed; border:1px solid #2ecc71; color:#2ecc71;
+        {% elif message.tags == 'error' %}
+          background:#ffe6e6; border:1px solid #e74c3c; color:#e74c3c;
+        {% endif %}
+      ">
+        {{ message }}
+      </li>
     {% endfor %}
   </ul>
 {% endif %}
 
-<form method="post">
-  {% csrf_token %}
-  <label for="name">Branch name:</label>
-  <input type="text" id="name" name="name" placeholder="feature-x" required>
-  <button type="submit">Create Branch</button>
-</form>
+<!-- Create Branch Form -->
+<div style="background:#161b22; padding:20px; border-radius:8px; max-width:500px;">
 
-<a href="{% url 'repos:detail' repo.id %}">Back to repository</a>
+  <form method="post">
+    {% csrf_token %}
+
+    <!-- Branch Name Input -->
+    <div style="margin-bottom:15px;">
+      <label style="font-weight:bold;">Branch Name</label><br>
+      <input type="text"
+             name="name"
+             placeholder="feature-x"
+             required
+             style="width:100%;
+                    padding:8px;
+                    border-radius:6px;
+                    border:1px solid #30363d;
+                    margin-top:5px;">
+      <div style="font-size:12px; color:#8b949e; margin-top:5px;">
+        Use lowercase letters, numbers, dashes or slashes.
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit"
+            style="padding:10px 18px;
+                   background:#238636;
+                   color:white;
+                   border:none;
+                   border-radius:6px;
+                   cursor:pointer;">
+      Create Branch
+    </button>
+
+  </form>
+
+</div>
+
+<!-- Back Link -->
+<div style="margin-top:20px;">
+  <a href="{% url 'repos:detail' repo.id %}" style="color:#58a6ff;">
+    ← Back to repository
+  </a>
+</div>
+
 {% endblock %}

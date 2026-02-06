@@ -1,73 +1,103 @@
-# Import decorator to require login for views
+
 from django.contrib.auth.decorators import login_required
 
-# Import shortcuts for rendering templates, redirecting, and fetching objects or 404
+
 from django.shortcuts import render, redirect, get_object_or_404
 
-# Import Django messages framework for success/error notifications
 from django.contrib import messages
 
-# Import HttpResponse for returning file downloads
+
 from django.http import HttpResponse
 
-# Import Python standard libraries for in-memory streams and ZIP file creation
 import io
 import zipfile
 
-# Import Repository model from current app
 from .models import Repository
 
-# Import Branch model from branches app
 from branches.models import Branch
-
-# Import Commit model from commits app
 from commits.models import Commit
 
 from ci.models import ScanResult
 from django.db.models import Count
+from django.core.paginator import Paginator
 
 
 
 
-# Dashboard view (homepage)
-@login_required  # Require user to be logged in
+@login_required
 def home_dashboard(request):
-    # Query repositories owned by the current user, newest first
-    user_repos = Repository.objects.filter(owner=request.user).order_by('-created_at')
-    # Render dashboard template with repos context
-    return render(request, 'repos/home_dashboard.html', {'user_repos': user_repos})
+
+    # Get search query from URL (?q=repo-name)
+    query = request.GET.get("q", "").strip()
+
+    # repos owned by current user
+    user_repos = Repository.objects.filter(owner=request.user)
+
+    # Apply search filter if query exists
+    if query:
+        user_repos = user_repos.filter(name__icontains=query)
+
+    # Order newest first
+    user_repos = user_repos.order_by("-created_at")
+
+    # Repo statistics
+    total_repos = user_repos.count()
+    public_count = user_repos.filter(is_private=False).count()
+    private_count = user_repos.filter(is_private=True).count()
+
+    return render(request, "repos/home_dashboard.html", {
+        "user_repos": user_repos,
+        "query": query,
+        "total_repos": total_repos,
+        "public_count": public_count,
+        "private_count": private_count,
+    })
 
 
 
-# List repositories
-@login_required  # Require login
+
+@login_required
 def repo_list(request):
-    # Query repositories owned by the current user, newest first
-    repos = Repository.objects.filter(owner=request.user).order_by('-created_at')
-    # Render list template with repos context
-    return render(request, 'repos/repo_list.html', {'repos': repos})
+
+    query = request.GET.get("q", "").strip()
+
+    repos = Repository.objects.filter(owner=request.user)
+
+    if query:
+        repos = repos.filter(name__icontains=query)
+
+    repos = repos.order_by("-created_at")
+
+    # Pagination 10 repos per page
+    paginator = Paginator(repos, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "repos/repo_list.html", {
+        "page_obj": page_obj,
+        "query": query,
+    })
 
 
 
-# Create a new repository
-@login_required  # Require login
+@login_required  
 def repo_create(request):
     # If request is POST, process submitted form data
     if request.method == 'POST':
-        # Extract repository name from form input
+        #repository name from form input
         name = request.POST.get('name', '').strip()
-        # Extract optional description from form input
+        # optional description from form input
         description = request.POST.get('description', '').strip()
-        # Extract visibility option (public/private)
+        # visibility option (public/private)
         is_private = request.POST.get('visibility') == 'private'
-        # Extract checkbox for README creation
+        # checkbox for README creation
         add_readme = request.POST.get('add_readme') == 'on'
-        # Extract gitignore option (future extension)
+        # gitignore option 
         gitignore = request.POST.get('gitignore', '')
-        # Extract license option (future extension)
+        # license option 
         license = request.POST.get('license', '')
 
-        # Validate presence of repository name
+        
         if not name:
             # Add error message if name is missing
             messages.error(request, 'Repository name is required.')
@@ -127,12 +157,7 @@ def repo_create(request):
 
 # Function to build a file tree from the latest commit snapshot
 def build_file_tree_with_commit(latest_commit):
-    """
-    Convert the latest commit snapshot into a nested tree structure.
-    Each node is either a folder (is_dir=True, children={}) or a file (is_dir=False).
-    Attach commit metadata to each file node.
-    Handles both dict-style snapshot entries and legacy string entries.
-    """
+   
     tree = {}
     if latest_commit and latest_commit.snapshot:
         for path, file_entry in latest_commit.snapshot.items():
@@ -171,7 +196,7 @@ def build_file_tree_with_commit(latest_commit):
 
 
 
-# View function to display repository details
+
 def repo_detail(request, repo_id):
     # Fetch the repository object by ID, ensuring it belongs to the logged-in user
     repo = get_object_or_404(Repository, id=repo_id, owner=request.user)
@@ -193,12 +218,12 @@ def repo_detail(request, repo_id):
         # If no commits exist, set file_tree to None
         file_tree = None
 
-    # Render the repository detail template with the context data
+    
     return render(request, 'repos/repo_detail.html', {
-        'repo': repo,                 # Repository object
-        'default_branch': default_branch,  # Default branch object
-        'commits': commits,           # List of commits for the branch
-        'file_tree': file_tree,       # Nested file tree from the latest commit snapshot
+        'repo': repo,                 
+        'default_branch': default_branch,  
+        'commits': commits,           
+        'file_tree': file_tree,       
     })
 
 
@@ -206,10 +231,10 @@ def repo_detail(request, repo_id):
 
 
 
-# Pull latest commit snapshot as ZIP
-@login_required  # Require login
+
+@login_required  
 def repo_pull(request, repo_id):
-    # Fetch repository by ID for current user, or return 404 if not found
+    
     repo = get_object_or_404(Repository, id=repo_id, owner=request.user)
 
     # Get default branch "main"
@@ -254,10 +279,10 @@ def repo_pull(request, repo_id):
 
 
 
-# Require the user to be logged in before accessing repository code
+
 @login_required
 def repo_code(request, repo_id, path=""):
-    # Fetch the repository object by ID, ensuring it belongs to the logged-in user
+
     repo = get_object_or_404(Repository, id=repo_id, owner=request.user)
 
     # Retrieve the default branch (commonly 'main') for this repository
@@ -269,21 +294,19 @@ def repo_code(request, repo_id, path=""):
     # If no commit exists or snapshot is empty, render an empty code page
     if not latest_commit or not latest_commit.snapshot:
         return render(request, 'repos/repo_code.html', {
-            'repo': repo,       # Repository object
-            'branch': branch,   # Branch object
-            'files': [],        # No files to display
-            'path': path,       # Current path (empty or provided)
+            'repo': repo,       
+            'branch': branch,   
+            'files': [],        
+            'path': path,       
         })
 
-    # NOTE: This implementation only shows files from the latest commit snapshot (GitHub-style).
-    # If you want to show all files ever pushed, you would need to merge snapshots from all commits.
-
-    # Initialize dictionary to hold files/folders for the current path
+    
+    
     files = {}
 
     # Loop through each file path in the latest commit snapshot
     for filename, content in latest_commit.snapshot.items():
-        # Only include files that start with the current path (to support folder navigation)
+        # Only include files that start with the current path 
         if filename.startswith(path):
             # Strip the current path prefix to get relative path
             relative = filename[len(path):].lstrip("/")
@@ -294,8 +317,8 @@ def repo_code(request, repo_id, path=""):
             # If only one part, it's a file directly under this path
             if len(parts) == 1:
                 files[parts[0]] = {
-                    "is_dir": False,       # Flag indicating this is a file
-                    "content": content,    # File content or metadata
+                    "is_dir": False,     
+                    "content": content,    
                 }
             # Otherwise, it's a folder containing deeper files
             else:
@@ -305,15 +328,15 @@ def repo_code(request, repo_id, path=""):
 
     # Render the code template with repository, branch, files, and current path
     return render(request, 'repos/repo_code.html', {
-        'repo': repo,       # Repository object
-        'branch': branch,   # Branch object
-        'files': files,     # Dictionary of files/folders for current path
-        'path': path,       # Current path being viewed
+        'repo': repo,       
+        'branch': branch,   
+        'files': files,     
+        'path': path,       
     })
 
 
 
-# Require the user to be logged in before allowing file view
+
 @login_required
 def file_view(request, repo_id, branch_id, filename):
     # Retrieve the repository object by ID, ensuring it belongs to the logged-in user
@@ -344,32 +367,32 @@ def file_view(request, repo_id, branch_id, filename):
             content = file_entry.get('content', '')
         else:
             # Binary file → never render Base64 directly
-            # Instead show a safe placeholder
+    
             content = "[Binary file not displayed]"
     else:
-        # Legacy case: file_entry is just a string
+        
         content = str(file_entry)
         is_text = True
         file_size = len(content)
 
-    # Pass all relevant data to the template
+    
     return render(request, 'repos/file_view.html', {
-        'repo': repo,                         # Repository object
-        'branch': branch,                     # Branch object
-        'filename': filename,                 # File name/path
-        'content': content,                   # File content or placeholder
-        'is_text': is_text,                   # Flag: text or binary
-        'file_size': file_size,               # File size in bytes
-        'commit_message': commit.message,     # Commit message
-        'commit_author': commit.author.username,  # Commit author username
-        'commit_date': commit.created_at,     # Commit timestamp
+        'repo': repo,                         
+        'branch': branch,                     
+        'filename': filename,                 
+        'content': content,                   
+        'is_text': is_text,                   
+        'file_size': file_size,           
+        'commit_message': commit.message,    
+        'commit_author': commit.author.username,  
+        'commit_date': commit.created_at,    
     })
 
 
 
 
 
-# Repository Commits Page
+
 
 
 @login_required
@@ -388,7 +411,6 @@ def repo_commits(request, repo_id):
     })
 
 
-# Repository Branches Page
 
 @login_required
 def repo_branches(request, repo_id):
@@ -515,7 +537,6 @@ def repo_issues(request, repo_id):
     # Ensure repository exists and belongs to user
     repo = get_object_or_404(Repository, id=repo_id, owner=request.user)
 
-    # Until Issue model is built, show empty page
     return render(request, "repos/repo_issues.html", {
         "repo": repo,
     })
@@ -529,7 +550,7 @@ def repo_pulls(request, repo_id):
     # Ensure repository exists and belongs to user
     repo = get_object_or_404(Repository, id=repo_id, owner=request.user)
 
-    # Until PullRequest model exists, render placeholder
+    
     return render(request, "repos/repo_pulls.html", {
         "repo": repo,
     })

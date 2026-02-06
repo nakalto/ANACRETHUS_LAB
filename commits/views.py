@@ -10,16 +10,16 @@ from django.contrib.auth.decorators import login_required
 @login_required
 def commit_create(request):
     if request.method == 'POST':
-        # Extract branch_id from form to associate commit
+        
         branch_id = request.POST.get('branch_id')
-        # Extract commit message describing the changes
+        
         message = request.POST.get('message', '').strip()
-        # Extract snapshot_text that simulates code changes
+        
         snapshot_text = request.POST.get('snapshot_text', '').strip()
 
-        # Fetch the target branch or return 404 if invalid
+        
         branch = get_object_or_404(Branch, id=branch_id)
-        # Ensure the branch belongs to a repository
+        
         repo = branch.repo
 
         # If the snapshot contains secrets, block commit and show error
@@ -48,7 +48,7 @@ def commit_create(request):
 
         # Inform user of successful commit creation
         messages.success(request, 'Commit created and queued for scanning.')
-        # Redirect to the commit list view for the branch
+        
         return redirect('commits:list', branch_id=branch_id)
 
     # For GET request require a branch_id via query string to prefill the form
@@ -57,42 +57,41 @@ def commit_create(request):
     return render(request, 'commits/commit_create.html', {'branch': branch})
 
 
-# Define a view to list commits for a specific branch
-@login_required  # Require the user to be logged in
+
+@login_required  
 def commit_list(request, branch_id):
-    # Retrieve the branch object by ID, or return 404 if not found
+    
     branch = get_object_or_404(Branch, id=branch_id)
 
-    # Query all commits for this branch, ordered by newest first
+    
     commits = Commit.objects.filter(branch=branch).order_by('-created_at')
 
-    # Render the commit list template, passing branch and commits
+    
     return render(request, 'commits/commit_list.html', {
-        'branch': branch,   # Branch object
-        'commits': commits  # List of commits
+        'branch': branch,   #
+        'commits': commits  
     })
 
 
-# Define a view to handle commit pushes (uploading files to a branch)
+
 @login_required
 def commit_push(request, repo_id, branch_id):
 
-    # Fetch the repository and ensure it belongs to the logged-in user
     repo = get_object_or_404(Repository, id=repo_id, owner=request.user)
 
-    # Fetch the branch and ensure it belongs to the repository
+    
     branch = get_object_or_404(Branch, id=branch_id, repo=repo)
 
-    # Only process POST requests
+
     if request.method == 'POST':
 
-        # Get commit message from form
+        
         message = request.POST.get('message', 'Push code')
 
         # Dictionary to store uploaded files
         snapshot_data = {}
 
-        # Extensions always treated as text
+        
         text_extensions = (
             '.html', '.xml', '.css', '.js', '.md',
             '.py', '.java', '.c', '.cpp', '.h',
@@ -178,11 +177,11 @@ def commit_push(request, repo_id, branch_id):
 
 
 
-# Commit detail view
+
 def commit_detail(request, commit_id):
-    # Fetch commit by ID
+    
     commit = get_object_or_404(Commit, id=commit_id)
-    # Render template with commit info
+    
     return render(request, 'commits/commit_detail.html', {
         'commit': commit,
         'repo': commit.repo,

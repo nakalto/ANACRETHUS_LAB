@@ -1,52 +1,100 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <!-- Page title shows which repo you are pushing to -->
-  <title>Push Code - {{ repo.name }}</title>
-  <style>
-    /* Basic styling for readability */
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    h2 { color: #0366d6; }
-    form { margin-top: 20px; }
-    label { display: block; margin-top: 10px; }
-    input, button { margin-top: 5px; }
-    .messages li { list-style: none; margin: 5px 0; }
-    .messages .error { color: red; }
-    .messages .success { color: green; }
-  </style>
-</head>
-<body>
-  <!-- Heading shows branch and repo context -->
-  <h2>Push code to {{ branch.name }} in {{ repo.name }}</h2>
+{% extends "base.html" %}
 
-  <!-- Show Django messages (success/error notifications) -->
-  {% if messages %}
-    <ul class="messages">
-      {% for message in messages %}
-        <li class="{{ message.tags }}">{{ message }}</li>
-      {% endfor %}
-    </ul>
+{% block title %}
+Push Code — {{ repo.owner.username }}/{{ repo.name }}
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div style="margin-bottom:20px;">
+  <h2>Push Code</h2>
+  <div style="color:#8b949e;">
+    <strong>{{ repo.owner.username }}/{{ repo.name }}</strong><br>
+    Branch: <strong>{{ branch.name }}</strong>
+  </div>
+</div>
+
+<!-- Secret Scanning Status -->
+<div style="margin-bottom:15px;">
+  {% if repo.secret_scanning_enabled %}
+    <div style="padding:10px; background:#e6ffed; border:1px solid #2ecc71; border-radius:6px;">
+      🔐 <strong>Secret scanning is enabled.</strong><br>
+      Commits containing credentials will be blocked automatically.
+    </div>
+  {% else %}
+    <div style="padding:10px; background:#ffe6e6; border:1px solid #e74c3c; border-radius:6px;">
+      ⚠ <strong>Secret scanning is disabled.</strong><br>
+      Sensitive credentials will NOT be checked.
+    </div>
   {% endif %}
+</div>
 
-  <!-- Push form -->
+<!-- Django Messages -->
+{% if messages %}
+  <ul style="padding:0; list-style:none;">
+    {% for message in messages %}
+      <li style="
+        margin-bottom:8px;
+        padding:10px;
+        border-radius:6px;
+        {% if message.tags == 'success' %}
+          background:#e6ffed; border:1px solid #2ecc71; color:#2ecc71;
+        {% elif message.tags == 'error' %}
+          background:#ffe6e6; border:1px solid #e74c3c; color:#e74c3c;
+        {% endif %}
+      ">
+        {{ message }}
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<!-- Push Form -->
+<div style="background:#161b22; padding:20px; border-radius:8px; max-width:600px;">
+
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    
-    <!-- Commit message input -->
-    <label for="message">Commit message:</label>
-    <input type="text" id="message" name="message" placeholder="Commit message" required>
 
-    <!-- File/folder upload input -->
-    <label for="files">Upload files or a folder:</label>
-    <!-- webkitdirectory allows selecting a folder and uploads all nested files -->
-    <input type="file" id="files" name="files" webkitdirectory multiple required>
+    <!-- File Upload -->
+    <div style="margin-bottom:15px;">
+      <label style="font-weight:bold;">Upload files or a folder</label><br>
+      <input type="file" name="files" webkitdirectory multiple required
+             style="margin-top:5px;">
+      <div style="font-size:12px; color:#8b949e;">
+        You can select a folder to upload nested files.
+      </div>
+    </div>
 
-    <!-- Submit button -->
-    <button type="submit">Push Code</button>
+    <!-- Commit Message -->
+    <div style="margin-bottom:15px;">
+      <label style="font-weight:bold;">Commit message</label><br>
+      <input type="text"
+             name="message"
+             placeholder="Describe your changes..."
+             required
+             style="width:100%; padding:8px; border-radius:6px; border:1px solid #30363d; margin-top:5px;">
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit"
+            style="padding:10px 18px;
+                   background:#238636;
+                   color:white;
+                   border:none;
+                   border-radius:6px;
+                   cursor:pointer;">
+      Commit changes
+    </button>
+
   </form>
+</div>
 
-  <!-- Navigation back to repo detail -->
-  <p><a href="{% url 'repos:detail' repo.id %}">Back to repository</a></p>
-</body>
-</html>
+<!-- Navigation -->
+<div style="margin-top:20px;">
+  <a href="{% url 'repos:detail' repo.id %}" style="color:#58a6ff;">
+    ← Back to repository
+  </a>
+</div>
+
+{% endblock %}
